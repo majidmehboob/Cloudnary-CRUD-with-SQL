@@ -1,0 +1,150 @@
+"use client"
+import { useState, useEffect } from 'react';
+import { getAllFile, putNewFile, deleteFile, editFile } from '@/app/services/index';
+import { CldUploadWidget } from 'next-cloudinary';
+import { MdDelete } from 'react-icons/md';
+import { FaEdit } from 'react-icons/fa';
+import Model from '@/app/components/modelfile';
+
+export default function Home() {
+  const [url, setUrl] = useState<any>(null);
+  const [model, setModel] =useState<any> (false);
+  const [result, setResult] = useState<any>([]);
+  const [editData, setEditData] = useState<any>(null);
+  const [hover, setHover] = useState<any>(-1);
+  const [file,setfile]=useState<any>(0)
+ const [realdata,setrealdata]=useState<any>([])
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+  useEffect(()=>{
+    if(file==1){
+      let r=realdata?.filter((item:any)=>{return item.format=="video"})
+      setResult(r)
+     
+    }
+    else if(file==2){
+      let w=realdata?.filter((item:any)=>{return item.format=="image"})
+      setResult(w)
+      
+    }
+    else{
+      let q=realdata?.filter((item:any)=>{return item})
+      setResult(q)
+    
+    }
+   },[file])
+
+  async function fetchData() {
+    const response = await getAllFile();
+    console.log("fetchData", response)
+    if (response.sucess) {
+      setResult(response.data);
+      setrealdata(response.data)
+    }
+  }
+
+  useEffect(() => {
+    if (url) {
+      putFile();
+      console.log("URL", url);
+    }
+  }, [url]);
+
+  async function putFile() {
+    const response = await putNewFile(url);
+    if (response.sucess) {
+      fetchData();
+      setUrl(null);
+      console.log("RESPONSE", response);
+    }
+  }
+
+  async function handleDelete(data:any) {
+    console.log("DATA", data);
+    const response = await deleteFile(data);
+    if (response.sucess) {
+      fetchData();
+    }
+  }
+
+  async function handleEdit(data:any) {
+    setModel(true);
+    setEditData({ data, status: false });
+  }
+   async function HandleEditFunction(editData:any){
+        const response=await editFile(editData)
+        if(response.sucess){
+            setModel(false)
+            fetchData()
+        }
+    }
+  return (
+    <div>
+      {model && <Model 
+      setModel={setModel} 
+      editData={editData} 
+      setEditData={setEditData}
+      HandleEditFunction={HandleEditFunction} />}
+      <div className='sticky top-0 z-50'>
+      <div className='min-h-xl  pb-10 bg-white text-left p-5  flex justify-between gap-2 shadow-2xl'>
+      <CldUploadWidget 
+      uploadPreset="todo_app"
+     onSuccess={({event,info}:any)=>{
+    if(event === "success"){
+      setUrl({url:info?.secure_url,format:info?.resource_type})
+    }
+}}>
+  {({ open }) => {
+    return (
+      <button 
+      className="text-md p-2 bg-green-400 text-white lowercase rounded-md"
+      onClick={() => open()}>
+       {!url?"Upload File":"Loading"}
+      </button>
+    );
+  }}
+      </CldUploadWidget>
+     </div>
+    <div className='p-3 rounded-es-3xl  flex justify-center gap-10 bg-white mb-10  w-[50%] absolute right-0 before:bg-white shadow-xl  before:h-full before:w-[80px] before:rotate-45 before:bottom-6  before:absolute before:-left-10'>
+            <button onClick={()=>setfile(0)} className='uppercase text-sm text-green-600'>All</button>      
+            <button onClick={()=>setfile(1)} className='uppercase text-sm text-green-600'>Videos</button>          
+            <button onClick={()=>setfile(2)} className='uppercase text-sm text-green-600'>Images</button>
+      </div>
+      </div>
+
+      <div className='grid grid-cols-3 gap-3 px-10 mt-20'>
+        {result && result.length > 0 ? result.map((item:any, index:number) => (
+          <div key={index} className='cursor-pointer relative transition-all duration-100 delay-100 hover:scale-90'>
+            {item.format === 'image' ? (
+              <div onMouseEnter={() => setHover(index)} onMouseLeave={() => setHover(-1)}>
+                <img src={item.url} alt="img" className='w-full' />
+                {hover === index && (
+                  <div className='absolute bottom-2 left-2 flex justify-center items-center gap-2'>
+                    <FaEdit onClick={() => handleEdit(item)} className='text-3xl text-green-500 bg-white rounded-full p-1' />
+                    <MdDelete onClick={() => handleDelete(item)} className='text-3xl text-green-500 bg-white rounded-full p-1' />
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div onMouseEnter={() => setHover(index)} onMouseLeave={() => setHover(-1)}>
+                <video className='w-full h-full' controls autoPlay loop>
+                  <source src={item.url} type="video/mp4" />
+                </video>
+                {hover === index && (
+                  <div className='absolute bottom-2 left-2 flex justify-center items-center gap-2'>
+                    <FaEdit onClick={() => handleEdit(item)} className='text-3xl text-green-500 bg-white rounded-full p-1' />
+                    <MdDelete onClick={() => handleDelete(item)} className='text-3xl text-green-500 bg-white rounded-full p-1' />
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )) : (
+          <h1 className='text-xl text-center animate-pulse'>Fetching your data...</h1>
+        )}
+      </div>
+    </div>
+  );
+}
