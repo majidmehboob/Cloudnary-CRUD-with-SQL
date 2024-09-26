@@ -1,49 +1,28 @@
-"use client"
+"use client";
 import { useState, useEffect } from 'react';
 import { getAllFile, putNewFile, deleteFile, editFile } from '@/app/services/index';
 import { CldUploadWidget } from 'next-cloudinary';
 import { MdDelete } from 'react-icons/md';
 import { FaEdit } from 'react-icons/fa';
 import Model from '@/app/components/modelfile';
+import { motion, useScroll, useTransform } from 'framer-motion';
 
 export default function Home() {
   const [url, setUrl] = useState<any>(null);
-  const [model, setModel] =useState<any> (false);
+  const [model, setModel] = useState<any>(false);
   const [result, setResult] = useState<any>([]);
   const [editData, setEditData] = useState<any>(null);
   const [hover, setHover] = useState<any>(-1);
-  const [file,setfile]=useState<any>(0)
- const [realdata,setrealdata]=useState<any>([])
+  const [file, setFile] = useState<any>(0);
+  const [realdata, setRealData] = useState<any>([]);
+  const [text, setText] = useState('');
+  const [recognition, setRecognition] = useState<any | null>(null);
+  const { scrollY } = useScroll();
+  const scale = useTransform(scrollY, [0, 400], [1, 2]); // Adjust values as needed
 
   useEffect(() => {
     fetchData();
   }, []);
-  useEffect(()=>{
-    if(file==1){
-      let r=realdata?.filter((item:any)=>{return item.format=="video"})
-      setResult(r)
-     
-    }
-    else if(file==2){
-      let w=realdata?.filter((item:any)=>{return item.format=="image"})
-      setResult(w)
-      
-    }
-    else{
-      let q=realdata?.filter((item:any)=>{return item})
-      setResult(q)
-    
-    }
-   },[file])
-
-  async function fetchData() {
-    const response = await getAllFile();
-    console.log("fetchData", response)
-    if (response.sucess) {
-      setResult(response.data);
-      setrealdata(response.data)
-    }
-  }
 
   useEffect(() => {
     if (url) {
@@ -51,6 +30,59 @@ export default function Home() {
       console.log("URL", url);
     }
   }, [url]);
+
+  useEffect(() => {
+    // Initialize SpeechRecognition if available
+    const initRecognition = () => {
+      if ('webkitSpeechRecognition' in window) {
+        const recognitionInstance = new (window as any).webkitSpeechRecognition();
+        recognitionInstance.continuous = true;
+        recognitionInstance.interimResults = true;
+
+        recognitionInstance.onresult = (event: any) => {
+          let transcript = '';
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            transcript += event.results[i][0].transcript;
+          }
+          console.log("Transcript:", transcript);
+          setText(transcript.toLowerCase()); // Store transcript in lowercase for easier comparison
+        };
+
+        recognitionInstance.onerror = (event: any) => {
+          console.error('Speech recognition error:', event.error);
+        };
+
+        setRecognition(recognitionInstance);
+        recognitionInstance.start(); // Automatically start voice recognition
+      } else {
+        console.error('Speech recognition is not supported in this browser.');
+      }
+    };
+
+    initRecognition();
+  }, []);
+
+  useEffect(() => {
+    console.log("TEXT", text);
+    
+    // Voice command processing
+    if (text.includes('show all')) {
+      setFile(0);
+    } else if (text.includes('show videos')) {
+      setFile(1);
+    } else if (text.includes('show images')) {
+      setFile(2);
+    }
+  }, [text]);
+
+  async function fetchData() {
+    const response = await getAllFile();
+    console.log("fetchData", response);
+    if (response.sucess) {
+      setResult(response.data);
+      setRealData(response.data);
+    }
+  }
 
   async function putFile() {
     const response = await putNewFile(url);
@@ -61,7 +93,7 @@ export default function Home() {
     }
   }
 
-  async function handleDelete(data:any) {
+  async function handleDelete(data: any) {
     console.log("DATA", data);
     const response = await deleteFile(data);
     if (response.sucess) {
@@ -69,82 +101,131 @@ export default function Home() {
     }
   }
 
-  async function handleEdit(data:any) {
+  async function handleEdit(data: any) {
     setModel(true);
     setEditData({ data, status: false });
   }
-   async function HandleEditFunction(editData:any){
-        const response=await editFile(editData)
-        if(response.sucess){
-            setModel(false)
-            fetchData()
-        }
+
+  async function handleEditFunction(editData: any) {
+    const response = await editFile(editData);
+    if (response.sucess) {
+      setModel(false);
+      fetchData();
     }
+  }
+
+  function getIndexFunction(index: number) {
+    if (index === 0 || index === 7 || index === 9) {
+      return 'md:col-span-2 md:row-span-2';
+    }
+  }
+
   return (
     <div>
       {model && <Model 
-      setModel={setModel} 
-      editData={editData} 
-      setEditData={setEditData}
-      HandleEditFunction={HandleEditFunction} />}
+        setModel={setModel} 
+        editData={editData} 
+        setEditData={setEditData}
+        HandleEditFunction={handleEditFunction} 
+      />}
       <div className='sticky top-0 z-50'>
-      <div className='min-h-xl  pb-10 bg-white text-left p-5  flex justify-between gap-2 shadow-2xl'>
-      <CldUploadWidget 
-      uploadPreset="todo_app"
-     onSuccess={({event,info}:any)=>{
-    if(event === "success"){
-      setUrl({url:info?.secure_url,format:info?.resource_type})
-    }
-}}>
-  {({ open }) => {
-    return (
-      <button 
-      className="text-md p-2 bg-green-400 text-white lowercase rounded-md"
-      onClick={() => open()}>
-       {!url?"Upload File":"Loading"}
-      </button>
-    );
-  }}
-      </CldUploadWidget>
-     </div>
-    <div className='p-3 rounded-es-3xl  flex justify-center gap-10 bg-white mb-10  w-[50%] absolute right-0 before:bg-white shadow-xl  before:h-full before:w-[80px] before:rotate-45 before:bottom-6  before:absolute before:-left-10'>
-            <button onClick={()=>setfile(0)} className='uppercase text-sm text-green-600'>All</button>      
-            <button onClick={()=>setfile(1)} className='uppercase text-sm text-green-600'>Videos</button>          
-            <button onClick={()=>setfile(2)} className='uppercase text-sm text-green-600'>Images</button>
-      </div>
+        <motion.div
+          className='min-h-xl md:pb-10 pb-2 bg-white text-left p-5 flex justify-between gap-2 shadow-2xl'
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          <CldUploadWidget 
+            uploadPreset="todo_app"
+            onSuccess={({ event, info }: any) => {
+              if (event === "success") {
+                setUrl({ url: info?.secure_url, format: info?.resource_type });
+              }
+            }}>
+            {({ open }) => (
+              <button 
+                className="text-md p-2 bg-green-400 text-white lowercase rounded-md w-full md:w-auto"
+                onClick={() => open()}>
+                {!url ? "Upload File" : "Loading"}
+              </button>
+            )}
+          </CldUploadWidget>
+        </motion.div>
+        <motion.div
+          className='md:p-3 p-2 rounded-es-3xl md:rounded-none rounded-ee-3xl flex justify-center md:gap-10 gap-5 bg-white mb-10 md:w-[50%] w-full md:absolute md:right-0 md:before:bg-white shadow-xl md:before:h-full md:before:w-[80px] md:before:skew-x-[45deg] md:before:bottom-0 md:before:absolute before:-left-8'
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.5 }}
+        >
+          <button onClick={() => setFile(0)} className={`${file === 0 ? "bg-green-500 text-white" : "text-green-500 bg-white"} p-1 rounded-sm uppercase text-lg font-thin font-mono`}>All</button>
+          <button onClick={() => setFile(1)} className={`${file === 1 ? "bg-green-500 text-white" : "text-green-500 bg-white"} p-1 rounded-sm uppercase text-lg font-thin font-mono`}>Videos</button>
+          <button onClick={() => setFile(2)} className={`${file === 2 ? "bg-green-500 text-white" : "text-green-500 bg-white"} p-1 rounded-sm uppercase text-lg font-thin font-mono`}>Images</button>
+        </motion.div>
       </div>
 
-      <div className='grid grid-cols-3 gap-3 px-10 mt-20'>
-        {result && result.length > 0 ? result.map((item:any, index:number) => (
-          <div key={index} className='cursor-pointer relative transition-all duration-100 delay-100 hover:scale-90'>
-            {item.format === 'image' ? (
+      <motion.div
+        className='overflow-y-hidden grid md:grid-cols-3 grid-cols-1 gap-3 md:px-10 px-5 mt-20'
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        {result.length > 0 ? result.map((item: any, index: number) => (
+          (file === 0 || (file === 1 && item.format === "video") || (file === 2 && item.format === "image")) ? (
+            <motion.div
+              key={index}
+              className={`${getIndexFunction(index)} cursor-pointer relative transition-all duration-100 delay-100 hover:scale-90`}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+            >
               <div onMouseEnter={() => setHover(index)} onMouseLeave={() => setHover(-1)}>
-                <img src={item.url} alt="img" className='w-full' />
+                {item.format === 'image' ? (
+                  <motion.img
+                    src={item.url}
+                    alt="img"
+                    className='w-full bg-cover'
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.5 }}
+                  />
+                ) : (
+                  <motion.video
+                    className='w-full h-full'
+                    controls
+                    autoPlay
+                    loop
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <source src={item.url} type="video/mp4" />
+                  </motion.video>
+                )}
                 {hover === index && (
-                  <div className='absolute bottom-2 left-2 flex justify-center items-center gap-2'>
+                  <motion.div
+                    className='absolute bottom-2 left-2 flex justify-center items-center gap-2'
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.3 }}
+                  >
                     <FaEdit onClick={() => handleEdit(item)} className='text-3xl text-green-500 bg-white rounded-full p-1' />
                     <MdDelete onClick={() => handleDelete(item)} className='text-3xl text-green-500 bg-white rounded-full p-1' />
-                  </div>
+                  </motion.div>
                 )}
               </div>
-            ) : (
-              <div onMouseEnter={() => setHover(index)} onMouseLeave={() => setHover(-1)}>
-                <video className='w-full h-full' controls autoPlay loop>
-                  <source src={item.url} type="video/mp4" />
-                </video>
-                {hover === index && (
-                  <div className='absolute bottom-2 left-2 flex justify-center items-center gap-2'>
-                    <FaEdit onClick={() => handleEdit(item)} className='text-3xl text-green-500 bg-white rounded-full p-1' />
-                    <MdDelete onClick={() => handleDelete(item)} className='text-3xl text-green-500 bg-white rounded-full p-1' />
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+            </motion.div>
+          ) : null
         )) : (
-          <h1 className='text-xl text-center animate-pulse'>Fetching your data...</h1>
+          <motion.h1
+            className='text-xl text-center animate-pulse'
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 1, repeat: Infinity, repeatType: 'reverse' }}
+          >
+            Fetching your data...
+          </motion.h1>
         )}
-      </div>
+      </motion.div>
     </div>
   );
 }

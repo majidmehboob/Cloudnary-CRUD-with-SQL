@@ -2,3 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+.gradient-text {
+    background: linear-gradient(to right, #3b82f6, #8b5cf6);
+    /* Customize gradient colors */
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.matter-shape {
+    transition: transform 0.1s ease-out;
+    /* Smooth out shape transitions */
+}

@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 export const getAllFile = async () => {
     try {
-      const res = await fetch(`http://localhost:3000/api/GET`, {
+      const res = await fetch(`https://image-storage-gallery.vercel.app/api/GET`, {
         method: 'GET',
         cache: 'no-store',
         next:{
@@ -19,7 +19,7 @@ export const getAllFile = async () => {
   
   export const putNewFile = async (file) => {
     try {
-      const res = await fetch(`http://localhost:3000/api/POST`, {
+      const res = await fetch(`https://image-storage-gallery.vercel.app/api/POST`, {
         method: 'POST',
         body: JSON.stringify(file),
         headers: {
@@ -37,7 +37,7 @@ export const getAllFile = async () => {
   
   export const deleteFile = async (file) => {
     try {
-      const res = await fetch(`http://localhost:3000/api/DELETE`, {
+      const res = await fetch(`https://image-storage-gallery.vercel.app/api/DELETE`, {
         method: 'DELETE',
         body: JSON.stringify(file),
         headers: {
@@ -55,7 +55,7 @@ export const getAllFile = async () => {
   
   export const editFile = async (file) => {
     try {
-      const res = await fetch(`http://localhost:3000/api/UPDATE`, {
+      const res = await fetch(`https://image-storage-gallery.vercel.app/api/UPDATE`, {
         method: 'PUT',
         body: JSON.stringify(file),
         headers: {
