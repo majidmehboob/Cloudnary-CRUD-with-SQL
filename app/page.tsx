@@ -73,6 +73,7 @@ export default function Home() {
 
   async function fetchData() {
     const response = await getAllFile();
+    console.log(response,"RESPONSE")
     if (response.sucess) {
       setResult(response.data);
       setRealData(response.data);
@@ -125,7 +126,7 @@ export default function Home() {
       )}
       <div className="sticky top-0 z-50">
         <motion.div
-          className="min-h-xl md:pb-10 pb-2 bg-white text-left p-5 flex justify-between gap-2 shadow-2xl"
+          className="shadow-md min-h-xl md:pb-10 pb-2 bg-white text-left p-5 flex justify-between gap-2 "
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
@@ -175,7 +176,7 @@ export default function Home() {
       </div>
       <AnimatePresence>
         <motion.div className="text-bold text-2xl px-4 py-2 text-green-500   bg-white shadow-md" initial={{opacity:0,y:-10}} animate={{opacity:1,y:0}}>
-            Gallery Storage App
+            Gallery Store Application
           </motion.div>
         <motion.div
           className="overflow-y-hidden py-10 grid md:grid-cols-3 grid-cols-1 gap-3 md:px-10 px-5 mt-20"
