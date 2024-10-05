@@ -1,7 +1,11 @@
 export const dynamic = "force-dynamic";
+const baseUrl =
+  process.env.NODE_ENV === "development"
+    ? "http://localhost:3000" // Development API URL (localhost)
+    : "https://image-storage-gallery.vercel.app/"; // Production API URL (your Vercel deployment)
 export const getAllFile = async () => {
     try {
-      const res = await fetch(`https://cloudnary-crud-with-sql-dbdy.vercel.app/api/GET`, {
+      const res = await fetch(`${baseUrl}/api/GET`, {
         method: 'GET',
         cache: 'no-store',
         next:{
@@ -19,7 +23,7 @@ export const getAllFile = async () => {
   
   export const putNewFile = async (file) => {
     try {
-      const res = await fetch(`https://cloudnary-crud-with-sql-dbdy.vercel.app/api/POST`, {
+      const res = await fetch(`/api/POST`, {
         method: 'POST',
         body: JSON.stringify(file),
         headers: {
@@ -37,13 +41,13 @@ export const getAllFile = async () => {
   
   export const deleteFile = async (file) => {
     try {
-      const res = await fetch(`https://cloudnary-crud-with-sql-dbdy.vercel.app/api/DELETE`, {
-        method: 'DELETE',
+      const res = await fetch(`${baseUrl}/api/DELETE`, {
+        method: "DELETE",
         body: JSON.stringify(file),
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
         },
-        cache: 'no-store'
+        cache: "no-store",
       });
   
       const data = await res.json();
@@ -55,13 +59,13 @@ export const getAllFile = async () => {
   
   export const editFile = async (file) => {
     try {
-      const res = await fetch(`https://cloudnary-crud-with-sql-dbdy.vercel.app/api/UPDATE`, {
-        method: 'PUT',
+      const res = await fetch(`${baseUrl}/api/UPDATE`, {
+        method: "PUT",
         body: JSON.stringify(file),
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
         },
-        cache: 'no-store'
+        cache: "no-store",
       });
   
       const data = await res.json();

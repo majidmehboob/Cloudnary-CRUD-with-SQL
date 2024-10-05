@@ -1,18 +1,27 @@
 {
   "compilerOptions": {
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
-    "types": ["node", "custom"],
-    "typeRoots": ["./node_modules/@types", "./src/types"],
+    "types": [
+      "node"
+    ], // Removed 'custom' unless you have custom types
+    "typeRoots": [
+      "./node_modules/@types",
+      "./src/types"
+    ], // Ensure you have types in 'src/types'
     "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
-    "moduleResolution": "bundler",
+    "moduleResolution": "node", // 'bundler' can be replaced by 'node' for better compatibility
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "preserve",
+    "jsx": "preserve", // Preserve JSX in development, or change to 'react-jsx' for automatic JSX transformation
     "incremental": true,
     "plugins": [
       {
@@ -20,9 +29,18 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": [
+        "./*"
+      ] // Ensure your alias paths match your project structure
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }
